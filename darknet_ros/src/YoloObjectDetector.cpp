@@ -570,7 +570,7 @@ void* YoloObjectDetector::publishInThread() {
 
   // Publish bounding boxes and detection result.
   int num = roiBoxes_[0].num;
-  if (num > 0 && num <= 100) {
+  if (num >= 0 && num <= 100) {
     for (int i = 0; i < num; i++) {
       for (int j = 0; j < numClasses_; j++) {
         if (roiBoxes_[i].Class == j) {
