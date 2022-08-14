@@ -182,7 +182,7 @@ void YoloObjectDetector::cameraCallback(const sensor_msgs::ImageConstPtr& msg) {
   if (cam_image) {
     {
       boost::unique_lock<boost::shared_mutex> lockImageCallback(mutexImageCallback_);
-      imageHeader_ = msg->header;
+      imageHeader_ = cam_image->header;
       camImageCopy_ = cam_image->image.clone();
     }
     {
@@ -493,27 +493,53 @@ void YoloObjectDetector::yolo() {
 
   demoTime_ = what_time_is_it_now();
 
+  // keep track of what std_msgs::Header id this is (consecutively increasing)
+  std::uint32_t prevSeq_ = 0;
+  bool newImageForDetection = false;
+  bool hasDetectionsReady = false;
   while (!demoDone_) {
     buffIndex_ = (buffIndex_ + 1) % 3;
+
+    // check this isn't an image already seen
+    newImageForDetection = (prevSeq_ != headerBuff_[(buffIndex_ + 2) % 3].seq);
+
     fetch_thread = std::thread(&YoloObjectDetector::fetchInThread, this);
-    detect_thread = std::thread(&YoloObjectDetector::detectInThread, this);
-    if (!demoPrefix_) {
-      fps_ = 1. / (what_time_is_it_now() - demoTime_);
-      demoTime_ = what_time_is_it_now();
-      if (viewImage_) {
-        displayInThread(0);
+    if (newImageForDetection) {
+      // only detect if this is an image we haven't see before
+      detect_thread = std::thread(&YoloObjectDetector::detectInThread, this);
+    }
+
+    // only publish bounding boxes if detection has been done in the last iteration
+    if (hasDetectionsReady) {
+      if (!demoPrefix_) {
+        fps_ = 1. / (what_time_is_it_now() - demoTime_);
+        demoTime_ = what_time_is_it_now();
+        if (viewImage_) {
+          displayInThread(0);
+        } else {
+          generate_image(buff_[(buffIndex_ + 1) % 3], disp_);
+        }
+        publishInThread();
       } else {
-        generate_image(buff_[(buffIndex_ + 1) % 3], disp_);
+        char name[256];
+        sprintf(name, "%s_%08d", demoPrefix_, count);
+        save_image(buff_[(buffIndex_ + 1) % 3], name);
+        ++count;
       }
-      publishInThread();
-    } else {
-      char name[256];
-      sprintf(name, "%s_%08d", demoPrefix_, count);
-      save_image(buff_[(buffIndex_ + 1) % 3], name);
+      // state that the image has been published
+      hasDetectionsReady = false;
     }
     fetch_thread.join();
-    detect_thread.join();
-    ++count;
+    if (newImageForDetection) {
+      //increment the new sequence number to avoid detecting more than once
+      prevSeq_ = headerBuff_[(buffIndex_ + 2) % 3].seq;
+
+      // no detection made, so let thread execution complete so that it can be destroyed safely
+      detect_thread.join();
+
+      // only after the detect thread is joined, set this flag to true
+      hasDetectionsReady = true;
+    }
     if (!isNodeRunning()) {
       demoDone_ = true;
     }
