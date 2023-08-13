@@ -495,14 +495,14 @@ void YoloObjectDetector::yolo() {
   demoTime_ = what_time_is_it_now();
 
   // keep track of what std_msgs::Header id this is (consecutively increasing)
-  std::uint32_t prevSeq_ = 0;
+  ros::Time prevSeq_ = ros::Time(0.0);
   bool newImageForDetection = false;
   bool hasDetectionsReady = false;
   while (!demoDone_) {
     buffIndex_ = (buffIndex_ + 1) % 3;
 
     // check this isn't an image already seen
-    newImageForDetection = (prevSeq_ != headerBuff_[(buffIndex_ + 2) % 3].seq);
+    newImageForDetection = (prevSeq_ != headerBuff_[(buffIndex_ + 2) % 3].stamp);
 
     fetch_thread = std::thread(&YoloObjectDetector::fetchInThread, this);
     if (newImageForDetection) {
@@ -533,7 +533,7 @@ void YoloObjectDetector::yolo() {
     fetch_thread.join();
     if (newImageForDetection) {
       //increment the new sequence number to avoid detecting more than once
-      prevSeq_ = headerBuff_[(buffIndex_ + 2) % 3].seq;
+      prevSeq_ = headerBuff_[(buffIndex_ + 2) % 3].stamp;
 
       // no detection made, so let thread execution complete so that it can be destroyed safely
       detect_thread.join();
