@@ -12,7 +12,7 @@ from sensor_msgs.msg import Image
 class Tokamak:
     """Feedforward synchronised master and sub Kinect RGB images."""
     def __init__(self):
-        self.image_fusion_pub = rospy.Publisher("/kinect/rgb/image_raw", Image, queue_size=15)
+        self.image_fusion_pub = rospy.Publisher("/kinect/combined/image_raw", Image, queue_size=15)
         master_image = Subscriber("/kinect/master/rgb/image_raw", Image)
         sub_image = Subscriber("/kinect/sub/rgb/image_raw", Image)
         ts = ApproximateTimeSynchronizer([master_image, sub_image], queue_size=15, slop=0.1)
