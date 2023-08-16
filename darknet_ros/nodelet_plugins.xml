@@ -6,3 +6,10 @@
   </class>
 
 </library>
+
+<library path="lib/libtokamak">
+  <!-- Tokamak image synchronisation plugin -->
+  <class name="darknet_ros/tokamak" type="darknet_ros::Tokamak" base_class_type="nodelet::Nodelet">
+    <description>Tokamak Nodelet.</description>
+  </class>
+</library>

@@ -235,7 +235,7 @@ if (CUDA_SUCCESS)
     src/yolo_object_detector_nodelet.cpp
   )
 
-  cuda_add_executable(tokamak
+  cuda_add_library(tokamak
     src/tokamak.cpp
   )
 
@@ -253,7 +253,7 @@ else()
     src/yolo_object_detector_nodelet.cpp
   )
 
-  add_executable(tokamak
+  add_library(tokamak
     src/tokamak.cpp
   )
 

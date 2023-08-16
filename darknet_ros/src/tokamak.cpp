@@ -1,14 +1,20 @@
+#include <pluginlib/class_list_macros.h>
 #include <ros/time.h>
-#include "darknet_ros/tokamak.h"
+#include <darknet_ros/tokamak.h>
 
-Tokamak::Tokamak(const ros::NodeHandle& nh) : nh_(nh),
-  it_(nh_),
-  master_im_sub_(it_, "/kinect/master/rgb/image_raw", 15),
-  sub_im_sub_(it_, "/kinect/sub/rgb/image_raw", 15),
-  sync_(SerialImagePolicy(30), master_im_sub_, sub_im_sub_)
+PLUGINLIB_EXPORT_CLASS(darknet_ros::Tokamak, nodelet::Nodelet)
+
+namespace darknet_ros
 {
-  image_fusion_pub_ = it_.advertise("/kinect/combined/image_raw", 30);
-  sync_.registerCallback(boost::bind(&Tokamak::filterCallback, this, _1, _2));
+void Tokamak::onInit()
+{
+  ros::NodeHandle& nh = getPrivateNodeHandle();
+  image_transport::ImageTransport it(nh);
+  image_fusion_pub_ = it.advertise("/kinect/combined/image_raw", 30);
+  master_im_sub_.subscribe(it, "/kinect/master/rgb/image_raw", 15);
+  sub_im_sub_.subscribe(it, "/kinect/sub/rgb/image_raw", 15);
+  sync_.reset(new SerialImageSync(SerialImagePolicy(30), master_im_sub_, sub_im_sub_));
+  sync_->registerCallback(boost::bind(&Tokamak::filterCallback, this, _1, _2));
 }
 
 void Tokamak::filterCallback(const sensor_msgs::ImageConstPtr& master_im, const sensor_msgs::ImageConstPtr& sub_im)
@@ -17,15 +23,4 @@ void Tokamak::filterCallback(const sensor_msgs::ImageConstPtr& master_im, const 
   ros::Duration(0.0333).sleep();
   image_fusion_pub_.publish(sub_im);
 }
-
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "tokamak");
-  ros::NodeHandle nh("~");
-
-  Tokamak tokamak(nh);
-
-  ros::AsyncSpinner spinner(4);
-  spinner.start();
-  ros::waitForShutdown();
 }
