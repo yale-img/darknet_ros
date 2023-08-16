@@ -25,8 +25,7 @@
   <depend>darknet_ros_msgs</depend>
   <depend>actionlib</depend>
   <depend>nodelet</depend>
-
-  <exec_depend>message_filters</exec_depend>
+  <depend>message_filters</depend>
 
   <!-- Test dependencies -->
   <test_depend>rostest</test_depend>
