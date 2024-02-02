@@ -1,0 +1,2 @@
+darknet_ros_msgs/BoundingBox master_bounding_box
+darknet_ros_msgs/BoundingBox sub_bounding_box
