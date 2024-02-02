@@ -2,6 +2,11 @@
 Changelog for package darknet_ros_msgs
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2024-02-02)
+------------------
+* Add draft message types for supporting two camera sources (master and sub)
+* Contributors: Sasha Lew
+
 1.1.5 (2021-04-08)
 ------------------
 * Merge pull request `#189 <https://github.com/leggedrobotics/darknet_ros/issues/189>`_ from martinspedro/master
